@@ -16,9 +16,9 @@ func main() {
 		log.Fatalf("Failed to load configs: %s", err)
 	}
 
-	prefix := net.ParseIP(cfg.Prefix)
+	prefix := net.ParseIP(cfg.Zone["default"].Prefix)
 	if len(prefix) != net.IPv6len || prefix.IsUnspecified() {
-		log.Fatalf("Wrong prefix format: %s", cfg.Prefix)
+		log.Fatalf("Wrong prefix format: %s", cfg.Zone["default"].Prefix)
 	}
 
 	dnsProxy := DNSProxy{

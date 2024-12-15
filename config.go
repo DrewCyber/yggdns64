@@ -19,13 +19,20 @@ const (
 	DiscardInvalidAddress                = 2
 )
 
+type ZoneConfig struct {
+	Domains          []string `yaml:"domains"`
+	Prefix           string   `yaml:"prefix,omitempty"`
+	ReturnPublicIPv4 bool     `yaml:"return-public-ipv4"`
+}
+
 type Config struct {
-	Listen     string            `yaml:"listen"`
-	Prefix     string            `yaml:"prefix"`
-	Forwarders map[string]string `yaml:"forwarders"`
-	Default    string            `yaml:"default"`
-	IA         InvalidAddress    `yaml:"invalid-address"`
-	Static     map[string]string `yaml:"static"`
+	Listen     string                `yaml:"listen"`
+	Zone       map[string]ZoneConfig `yaml:"zone"`
+	Prefix     string                `yaml:"prefix"`
+	Forwarders map[string]string     `yaml:"forwarders"`
+	Default    string                `yaml:"default"`
+	IA         InvalidAddress        `yaml:"invalid-address"`
+	Static     map[string]string     `yaml:"static"`
 	Cache      struct {
 		ExpTime   time.Duration `yaml:"expiration"`
 		PurgeTime time.Duration `yaml:"purge"`
@@ -89,7 +96,7 @@ func parseFile(filePath string) (*Config, error) {
 	cfg.Cache.ExpTime = 0
 	cfg.Cache.PurgeTime = 0
 	cfg.LogLevel = "info"
-	if err := yaml.UnmarshalStrict(body, &cfg); err != nil {
+	if err := yaml.Unmarshal(body, &cfg); err != nil {
 		return nil, err
 	}
 
