@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/miekg/dns"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/miekg/dns"
+
 	//    "github.com/gdexlab/go-render/render"
 	"fmt"
 )
@@ -12,13 +14,13 @@ import (
 var yggnet *net.IPNet
 
 type DNSProxy struct {
-	Cache          *Cache
-	static         map[string]string
-	forwarders     map[string]string
-	defaultForward string
-	prefix         net.IP
-	strictIPv6     bool
-	ia             InvalidAddress
+	Cache            *Cache
+	static           map[string]string
+	forwarders       map[string]string
+	defaultForward   string
+	prefix           net.IP
+	ReturnPublicIPv4 bool
+	ia               InvalidAddress
 }
 
 func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
@@ -33,7 +35,7 @@ func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 
 		switch question.Qtype {
 		case dns.TypeA:
-			if proxy.strictIPv6 {
+			if !proxy.ReturnPublicIPv4 {
 				answer, err = proxy.processTypeA(dnsServer, &question, requestMsg)
 			} else {
 				answer, err = proxy.processOtherTypes(dnsServer, &question, requestMsg)
@@ -123,7 +125,7 @@ func (proxy *DNSProxy) processAnswerArray(q []dns.RR) (answer []dns.RR) {
 				case ProcessInvalidAddress: // return "[::]"
 					nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA ::")
 					answer = append(answer, nrr)
-					if !proxy.strictIPv6 {
+					if proxy.ReturnPublicIPv4 {
 						answer = append(answer, rr)
 					}
 					continue
@@ -131,7 +133,7 @@ func (proxy *DNSProxy) processAnswerArray(q []dns.RR) (answer []dns.RR) {
 			}
 			nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA " + proxy.MakeFakeIP(rr.A))
 			answer = append(answer, nrr)
-			if !proxy.strictIPv6 {
+			if proxy.ReturnPublicIPv4 {
 				answer = append(answer, rr)
 			}
 		default:

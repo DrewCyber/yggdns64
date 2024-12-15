@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 	//	  "github.com/gdexlab/go-render/render"
 )
 
@@ -29,8 +30,8 @@ type Config struct {
 		ExpTime   time.Duration `yaml:"expiration"`
 		PurgeTime time.Duration `yaml:"purge"`
 	} `yaml:"cache"`
-	LogLevel   string `yaml:"log-level"`
-	StrictIPv6 bool   `yaml:"strict-ipv6"`
+	LogLevel         string `yaml:"log-level"`
+	ReturnPublicIPv4 bool   `yaml:"return-public-ipv4"`
 }
 
 func (a InvalidAddress) String() string {

@@ -3,10 +3,11 @@ package main
 // Based on https://github.com/katakonst/go-dns-proxy/releases
 
 import (
-	"github.com/miekg/dns"
 	"log"
 	"net"
 	"time"
+
+	"github.com/miekg/dns"
 )
 
 func main() {
@@ -21,13 +22,13 @@ func main() {
 	}
 
 	dnsProxy := DNSProxy{
-		Cache:          New(cfg.Cache.ExpTime*time.Minute, cfg.Cache.PurgeTime*time.Minute),
-		forwarders:     cfg.Forwarders,
-		static:         cfg.Static,
-		prefix:         prefix,
-		defaultForward: cfg.Default,
-		strictIPv6:     cfg.StrictIPv6,
-		ia:             cfg.IA,
+		Cache:            New(cfg.Cache.ExpTime*time.Minute, cfg.Cache.PurgeTime*time.Minute),
+		forwarders:       cfg.Forwarders,
+		static:           cfg.Static,
+		prefix:           prefix,
+		defaultForward:   cfg.Default,
+		ReturnPublicIPv4: cfg.ReturnPublicIPv4,
+		ia:               cfg.IA,
 	}
 
 	logger := NewLogger(cfg.LogLevel)
