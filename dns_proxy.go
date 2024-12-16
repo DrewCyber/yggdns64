@@ -124,10 +124,12 @@ func (proxy *DNSProxy) processAnswerArray(q []dns.RR, zoneID string) (answer []d
 					continue
 				}
 			}
+			// return fake ip
 			if proxy.zones[zoneID].Prefix != nil {
 				nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA " + proxy.MakeFakeIP(rr.A, zoneID))
 				answer = append(answer, nrr)
 			}
+			// return public ipv4
 			if proxy.zones[zoneID].ReturnPublicIPv4 {
 				answer = append(answer, rr)
 			}

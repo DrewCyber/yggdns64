@@ -1,12 +1,12 @@
-# Listen address "[303:c771:1561:ed81::1]:53"
-listen: "127.0.0.1:53"
+# Listen address
+listen: "[303:c771:1561:ed81::1]:53"
 
 # Zones are handled from top to bottom
 # If zone prefix is unset, this zone it will not convert A records to ygg-prefixed AAAA
 zones:
   my-direct-zone:
     domains:                        # Zone domains filter
-      - "ru"
+      - "www.google.com"
       - "com.tr"
     return-public-ipv4: true        # Return 'white' A records
   default:
@@ -24,8 +24,7 @@ invalid-address: ignore
 
 # Forwarders
 forwarders:
-  ".ygg": 192.168.2.161:53
-  ".ufm": 192.168.2.1:53
+  ".ygg": "[308:84:68:55::]:53"  # Alfis servers: 308:25:40:bd:: / 308:62:45:62:: / 308:c8:48:45::
 
 # Default DNS forwarder
 default: 8.8.8.8:53
