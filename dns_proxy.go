@@ -36,21 +36,13 @@ func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 
 		switch question.Qtype {
 		case dns.TypeA:
-			if proxy.zones[zoneID].ReturnPublicIPv4 {
-				answer, err = proxy.processOtherTypes(dnsServer, &question, requestMsg)
-			} else {
-				answer, err = proxy.processTypeA(dnsServer, &question, requestMsg)
-			}
-
+			answer, err = proxy.processTypeA(dnsServer, &question, requestMsg, zoneID)
 		case dns.TypeAAAA:
 			answer, err = proxy.processTypeAAAA(dnsServer, &question, requestMsg, zoneID)
-
 		case dns.TypePTR:
 			answer, err = proxy.processTypePTR(dnsServer, &question, requestMsg, zoneID)
-
 		case dns.TypeANY:
 			answer, err = proxy.processTypeANY(dnsServer, &question, requestMsg, zoneID)
-
 		default:
 			answer, err = proxy.processOtherTypes(dnsServer, &question, requestMsg)
 		}
@@ -181,8 +173,8 @@ func (proxy *DNSProxy) processTypePTR(dnsServer string, q *dns.Question, request
 	return msg, nil
 }
 
-// Query A record. Emulate "no record" for existings A
-func (proxy *DNSProxy) processTypeA(dnsServer string, q *dns.Question, requestMsg *dns.Msg) (*dns.Msg, error) {
+// Query A record.
+func (proxy *DNSProxy) processTypeA(dnsServer string, q *dns.Question, requestMsg *dns.Msg, zoneID string) (*dns.Msg, error) {
 	queryMsg := new(dns.Msg)
 	requestMsg.CopyTo(queryMsg)
 	queryMsg.Question = []dns.Question{*q}
@@ -192,7 +184,10 @@ func (proxy *DNSProxy) processTypeA(dnsServer string, q *dns.Question, requestMs
 		queryMsg.MsgHdr.Opcode = dns.OpcodeNotify
 		return queryMsg, err
 	}
-	msg.Answer = make([]dns.RR, 0)
+	if proxy.zones[zoneID].ReturnPublicIPv4 {
+		// Emulate "no record" for existings A
+		msg.Answer = make([]dns.RR, 0)
+	}
 	return msg, nil
 }
 
@@ -340,7 +335,7 @@ func (dnsProxy *DNSProxy) getZoneID(domain string) string {
 
 func (dnsProxy *DNSProxy) getStatic(domain string) string {
 	for k, v := range dnsProxy.static {
-		if strings.ToLower(k+".") == strings.ToLower(domain) {
+		if strings.EqualFold(k+".", domain) {
 			return v
 		}
 	}
@@ -390,7 +385,7 @@ func (proxy *DNSProxy) MakeFakeIP(r net.IP, zoneID string) string {
 func ReversePTR(ptr string) (net.IP, error) {
 	var ip net.IP
 	if !strings.HasSuffix(ptr, ".in-addr.arpa.") && !strings.HasSuffix(ptr, ".ip6.arpa.") {
-		return ip, fmt.Errorf("Wrong ptr address in query %s", ptr)
+		return ip, fmt.Errorf("wrong ptr address in query %s", ptr)
 	}
 	s := strings.Split(ptr, ".")
 	switch len(s) {
@@ -417,7 +412,7 @@ func ReversePTR(ptr string) (net.IP, error) {
 			ip[j] = byte(b)<<4 | byte(a)
 		}
 	default: // wrong length
-		return ip, fmt.Errorf("Wrong PTR in query %s", ptr)
+		return ip, fmt.Errorf("wrong PTR in query %s", ptr)
 	}
 	return ip, nil
 }

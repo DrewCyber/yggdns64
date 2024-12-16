@@ -3,21 +3,20 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v2"
-	//	  "github.com/gdexlab/go-render/render"
 )
 
 type InvalidAddress int64
 
 const (
 	IgnoreInvalidAddress  InvalidAddress = 0
-	ProcessInvalidAddress                = 1
-	DiscardInvalidAddress                = 2
+	ProcessInvalidAddress InvalidAddress = 1
+	DiscardInvalidAddress InvalidAddress = 2
 )
 
 type ZoneConfig struct {
@@ -87,7 +86,7 @@ func InitConfig() (Config, error) {
 
 func parseFile(filePath string) (*Config, error) {
 	cfg := new(Config)
-	body, err := ioutil.ReadFile(filePath)
+	body, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -102,6 +101,5 @@ func parseFile(filePath string) (*Config, error) {
 	return cfg, nil
 }
 
-func (c *Config) validateForwarders() {
-
-}
+// func (c *Config) validateForwarders() {
+// }
