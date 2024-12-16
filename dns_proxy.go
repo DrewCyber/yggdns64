@@ -19,7 +19,6 @@ type DNSProxy struct {
 	static         map[string]string
 	forwarders     map[string]string
 	defaultForward string
-	prefix         net.IP
 	ia             InvalidAddress
 	zones          map[string]ZoneConfig
 }
@@ -44,10 +43,10 @@ func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 			}
 
 		case dns.TypeAAAA:
-			answer, err = proxy.processTypeAAAA(dnsServer, &question, requestMsg)
+			answer, err = proxy.processTypeAAAA(dnsServer, &question, requestMsg, zoneID)
 
 		case dns.TypePTR:
-			answer, err = proxy.processTypePTR(dnsServer, &question, requestMsg)
+			answer, err = proxy.processTypePTR(dnsServer, &question, requestMsg, zoneID)
 
 		case dns.TypeANY:
 			answer, err = proxy.processTypeANY(dnsServer, &question, requestMsg, zoneID)
@@ -133,7 +132,7 @@ func (proxy *DNSProxy) processAnswerArray(q []dns.RR, zoneID string) (answer []d
 					continue
 				}
 			}
-			nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA " + proxy.MakeFakeIP(rr.A))
+			nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA " + proxy.MakeFakeIP(rr.A, zoneID))
 			answer = append(answer, nrr)
 			if proxy.zones[zoneID].ReturnPublicIPv4 {
 				answer = append(answer, rr)
@@ -146,12 +145,12 @@ func (proxy *DNSProxy) processAnswerArray(q []dns.RR, zoneID string) (answer []d
 }
 
 // Query PTR
-func (proxy *DNSProxy) processTypePTR(dnsServer string, q *dns.Question, requestMsg *dns.Msg) (*dns.Msg, error) {
+func (proxy *DNSProxy) processTypePTR(dnsServer string, q *dns.Question, requestMsg *dns.Msg, zoneID string) (*dns.Msg, error) {
 	queryMsg := new(dns.Msg)
 	requestMsg.CopyTo(queryMsg)
 	//    queryMsg.Question = []dns.Question{*q}
 
-	ip, err := proxy.ReversePTR(q.Name)
+	ip, err := proxy.ReversePTR(q.Name, zoneID)
 	if err != nil {
 		queryMsg.MsgHdr.Rcode = dns.RcodeNameError
 		queryMsg.MsgHdr.Opcode = dns.OpcodeNotify
@@ -195,7 +194,7 @@ func (proxy *DNSProxy) processTypeA(dnsServer string, q *dns.Question, requestMs
 	return msg, nil
 }
 
-func (proxy *DNSProxy) processTypeAAAA(dnsServer string, q *dns.Question, requestMsg *dns.Msg) (msg *dns.Msg, err error) {
+func (proxy *DNSProxy) processTypeAAAA(dnsServer string, q *dns.Question, requestMsg *dns.Msg, zoneID string) (msg *dns.Msg, err error) {
 	msg = new(dns.Msg)
 	cacheAnswer, found := proxy.Cache.Get(q.Name)
 
@@ -210,7 +209,7 @@ func (proxy *DNSProxy) processTypeAAAA(dnsServer string, q *dns.Question, reques
 		if ip != "" {
 			requestMsg.CopyTo(msg)
 			answer := make([]dns.RR, 0)
-			rr, _ := dns.NewRR(q.Name + " IN AAAA " + proxy.MakeFakeIP(net.ParseIP(ip)))
+			rr, _ := dns.NewRR(q.Name + " IN AAAA " + proxy.MakeFakeIP(net.ParseIP(ip), zoneID))
 			answer = append(answer, rr)
 			msg.Answer = answer
 			msg.Question[0].Qtype = dns.TypeAAAA
@@ -278,7 +277,7 @@ func (proxy *DNSProxy) processTypeAAAA(dnsServer string, q *dns.Question, reques
 						continue
 					}
 				}
-				rr, _ := dns.NewRR(q.Name + " IN AAAA " + proxy.MakeFakeIP(a.A))
+				rr, _ := dns.NewRR(q.Name + " IN AAAA " + proxy.MakeFakeIP(a.A, zoneID))
 				answer = append(answer, rr)
 			}
 		}
@@ -366,8 +365,8 @@ func lookup(server string, m *dns.Msg) (*dns.Msg, error) {
 	return response, nil
 }
 
-func (proxy *DNSProxy) MakeFakeIP(r net.IP) string {
-	ip := proxy.prefix
+func (proxy *DNSProxy) MakeFakeIP(r net.IP, zoneID string) string {
+	ip := proxy.zones[zoneID].Prefix
 	if len(r) == net.IPv6len {
 		ip[15] = r[15]
 		ip[14] = r[14]
@@ -417,7 +416,7 @@ func ReversePTR(ptr string) (net.IP, error) {
 	return ip, nil
 }
 
-func (proxy *DNSProxy) ReversePTR(ptr string) (ipv4 net.IP, err error) {
+func (proxy *DNSProxy) ReversePTR(ptr string, zoneID string) (ipv4 net.IP, err error) {
 	var ip net.IP
 	ip, err = ReversePTR(ptr)
 	if err != nil {
@@ -427,7 +426,7 @@ func (proxy *DNSProxy) ReversePTR(ptr string) (ipv4 net.IP, err error) {
 		err = fmt.Errorf("PTR is not IPv6")
 	}
 	for i := 0; i < 12; i++ {
-		if ip[i] != proxy.prefix[i] {
+		if ip[i] != proxy.zones[zoneID].Prefix[i] {
 			err = fmt.Errorf("PTR doesn't have our prefix")
 			return
 		}

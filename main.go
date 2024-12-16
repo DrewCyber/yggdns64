@@ -16,8 +16,7 @@ func main() {
 		log.Fatalf("Failed to load configs: %s", err)
 	}
 
-	prefix := net.ParseIP(cfg.Zones["default"].Prefix)
-	if len(prefix) != net.IPv6len || prefix.IsUnspecified() {
+	if len(cfg.Zones["default"].Prefix) != net.IPv6len || cfg.Zones["default"].Prefix.IsUnspecified() {
 		log.Fatalf("Wrong prefix format: %s", cfg.Zones["default"].Prefix)
 	}
 
@@ -25,7 +24,6 @@ func main() {
 		Cache:          New(cfg.Cache.ExpTime*time.Minute, cfg.Cache.PurgeTime*time.Minute),
 		forwarders:     cfg.Forwarders,
 		static:         cfg.Static,
-		prefix:         prefix,
 		defaultForward: cfg.Default,
 		ia:             cfg.IA,
 		zones:          cfg.Zones,

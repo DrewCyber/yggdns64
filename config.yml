@@ -8,16 +8,13 @@ zones:
     domains:                        # Zone domains filter
       - "ya.ru"
       - "com.tr"
-    prefix: "300:dada:feda:f443:ff::"
+    prefix: "300:abcd:feda:f321:ff::"
     return-public-ipv4: true        # Return 'white' A records
   default:
     domains:                        # Zone domains filter
       - "."
-    # If prefix is set, then it will convert A records to AAAA
-    prefix: "300:dada:feda:f444:ff::"
+    prefix: "300:dada:feda:f123:ff::" # If prefix is set, then it will convert A records to AAAA
     return-public-ipv4: false       # Return 'white' A records
-
-prefix: "300:dada:feda:f443:ff::"
 
 # What to do with an "0.0.0.0" and [::] addresses
 #   "ignore"  - treated like a regular address (i.e. 0.0.0.0 return as [prefix::], [::] - drop)

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"strings"
 	"time"
 
@@ -21,14 +22,13 @@ const (
 
 type ZoneConfig struct {
 	Domains          []string `yaml:"domains"`
-	Prefix           string   `yaml:"prefix,omitempty"`
+	Prefix           net.IP   `yaml:"prefix,omitempty"`
 	ReturnPublicIPv4 bool     `yaml:"return-public-ipv4"`
 }
 
 type Config struct {
 	Listen     string                `yaml:"listen"`
 	Zones      map[string]ZoneConfig `yaml:"zones"`
-	Prefix     string                `yaml:"prefix"`
 	Forwarders map[string]string     `yaml:"forwarders"`
 	Default    string                `yaml:"default"`
 	IA         InvalidAddress        `yaml:"invalid-address"`
