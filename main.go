@@ -22,14 +22,13 @@ func main() {
 	}
 
 	dnsProxy := DNSProxy{
-		Cache:            New(cfg.Cache.ExpTime*time.Minute, cfg.Cache.PurgeTime*time.Minute),
-		forwarders:       cfg.Forwarders,
-		static:           cfg.Static,
-		prefix:           prefix,
-		defaultForward:   cfg.Default,
-		ReturnPublicIPv4: cfg.ReturnPublicIPv4,
-		ia:               cfg.IA,
-		zones:            cfg.Zones,
+		Cache:          New(cfg.Cache.ExpTime*time.Minute, cfg.Cache.PurgeTime*time.Minute),
+		forwarders:     cfg.Forwarders,
+		static:         cfg.Static,
+		prefix:         prefix,
+		defaultForward: cfg.Default,
+		ia:             cfg.IA,
+		zones:          cfg.Zones,
 	}
 
 	logger := NewLogger(cfg.LogLevel)

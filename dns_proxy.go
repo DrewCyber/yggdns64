@@ -15,22 +15,19 @@ import (
 var yggnet *net.IPNet
 
 type DNSProxy struct {
-	Cache            *Cache
-	static           map[string]string
-	forwarders       map[string]string
-	defaultForward   string
-	prefix           net.IP
-	ReturnPublicIPv4 bool
-	ia               InvalidAddress
-	zones            map[string]ZoneConfig
+	Cache          *Cache
+	static         map[string]string
+	forwarders     map[string]string
+	defaultForward string
+	prefix         net.IP
+	ia             InvalidAddress
+	zones          map[string]ZoneConfig
 }
 
 func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 	responseMsg := new(dns.Msg)
 	var answer *dns.Msg
 	var err error
-
-	// (*requestMsg).Question[0].Name  = "ya.ru."
 
 	if len(requestMsg.Question) > 0 {
 		question := requestMsg.Question[0]
@@ -40,10 +37,10 @@ func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 
 		switch question.Qtype {
 		case dns.TypeA:
-			if !proxy.zones[zoneID].ReturnPublicIPv4 {
-				answer, err = proxy.processTypeA(dnsServer, &question, requestMsg)
-			} else {
+			if proxy.zones[zoneID].ReturnPublicIPv4 {
 				answer, err = proxy.processOtherTypes(dnsServer, &question, requestMsg)
+			} else {
+				answer, err = proxy.processTypeA(dnsServer, &question, requestMsg)
 			}
 
 		case dns.TypeAAAA:
@@ -53,7 +50,7 @@ func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 			answer, err = proxy.processTypePTR(dnsServer, &question, requestMsg)
 
 		case dns.TypeANY:
-			answer, err = proxy.processTypeANY(dnsServer, &question, requestMsg)
+			answer, err = proxy.processTypeANY(dnsServer, &question, requestMsg, zoneID)
 
 		default:
 			answer, err = proxy.processOtherTypes(dnsServer, &question, requestMsg)
@@ -83,7 +80,7 @@ func (proxy *DNSProxy) processOtherTypes(dnsServer string, q *dns.Question, requ
 }
 
 // Query ANY
-func (proxy *DNSProxy) processTypeANY(dnsServer string, q *dns.Question, requestMsg *dns.Msg) (*dns.Msg, error) {
+func (proxy *DNSProxy) processTypeANY(dnsServer string, q *dns.Question, requestMsg *dns.Msg, zoneID string) (*dns.Msg, error) {
 	queryMsg := new(dns.Msg)
 	requestMsg.CopyTo(queryMsg)
 	queryMsg.Question = []dns.Question{*q}
@@ -94,14 +91,14 @@ func (proxy *DNSProxy) processTypeANY(dnsServer string, q *dns.Question, request
 	}
 
 	// Recompile reply
-	msg.Answer = proxy.processAnswerArray(msg.Answer)
-	msg.Extra = proxy.processAnswerArray(msg.Extra)
+	msg.Answer = proxy.processAnswerArray(msg.Answer, zoneID)
+	msg.Extra = proxy.processAnswerArray(msg.Extra, zoneID)
 
 	return msg, nil
 }
 
 // process answer array
-func (proxy *DNSProxy) processAnswerArray(q []dns.RR) (answer []dns.RR) {
+func (proxy *DNSProxy) processAnswerArray(q []dns.RR, zoneID string) (answer []dns.RR) {
 	answer = make([]dns.RR, 0)
 	for _, orr := range q {
 		switch rr := orr.(type) {
@@ -130,7 +127,7 @@ func (proxy *DNSProxy) processAnswerArray(q []dns.RR) (answer []dns.RR) {
 				case ProcessInvalidAddress: // return "[::]"
 					nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA ::")
 					answer = append(answer, nrr)
-					if proxy.ReturnPublicIPv4 {
+					if proxy.zones[zoneID].ReturnPublicIPv4 {
 						answer = append(answer, rr)
 					}
 					continue
@@ -138,7 +135,7 @@ func (proxy *DNSProxy) processAnswerArray(q []dns.RR) (answer []dns.RR) {
 			}
 			nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA " + proxy.MakeFakeIP(rr.A))
 			answer = append(answer, nrr)
-			if proxy.ReturnPublicIPv4 {
+			if proxy.zones[zoneID].ReturnPublicIPv4 {
 				answer = append(answer, rr)
 			}
 		default:

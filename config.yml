@@ -2,7 +2,7 @@
 listen: "127.0.0.1:53"
 
 # Zones are handled from top to bottom
-# If zone prefix is unset, this zone it will not convert A records to AAAA
+# If zone prefix is unset, this zone it will not convert A records to ygg-prefixed AAAA
 zones:
   my-direct-zone:
     domains:                        # Zone domains filter
@@ -17,9 +17,7 @@ zones:
     prefix: "300:dada:feda:f444:ff::"
     return-public-ipv4: false       # Return 'white' A records
 
-# Return A records with AAAA
-# otherwise return AAAA only
-return-public-ipv4: no
+prefix: "300:dada:feda:f443:ff::"
 
 # What to do with an "0.0.0.0" and [::] addresses
 #   "ignore"  - treated like a regular address (i.e. 0.0.0.0 return as [prefix::], [::] - drop)

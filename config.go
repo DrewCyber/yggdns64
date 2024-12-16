@@ -37,8 +37,7 @@ type Config struct {
 		ExpTime   time.Duration `yaml:"expiration"`
 		PurgeTime time.Duration `yaml:"purge"`
 	} `yaml:"cache"`
-	LogLevel         string `yaml:"log-level"`
-	ReturnPublicIPv4 bool   `yaml:"return-public-ipv4"`
+	LogLevel string `yaml:"log-level"`
 }
 
 func (a InvalidAddress) String() string {
