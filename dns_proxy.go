@@ -132,8 +132,10 @@ func (proxy *DNSProxy) processAnswerArray(q []dns.RR, zoneID string) (answer []d
 					continue
 				}
 			}
-			nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA " + proxy.MakeFakeIP(rr.A, zoneID))
-			answer = append(answer, nrr)
+			if proxy.zones[zoneID].Prefix != nil {
+				nrr, _ := dns.NewRR(rr.Hdr.Name + " IN AAAA " + proxy.MakeFakeIP(rr.A, zoneID))
+				answer = append(answer, nrr)
+			}
 			if proxy.zones[zoneID].ReturnPublicIPv4 {
 				answer = append(answer, rr)
 			}
@@ -209,8 +211,10 @@ func (proxy *DNSProxy) processTypeAAAA(dnsServer string, q *dns.Question, reques
 		if ip != "" {
 			requestMsg.CopyTo(msg)
 			answer := make([]dns.RR, 0)
-			rr, _ := dns.NewRR(q.Name + " IN AAAA " + proxy.MakeFakeIP(net.ParseIP(ip), zoneID))
-			answer = append(answer, rr)
+			if proxy.zones[zoneID].Prefix != nil {
+				rr, _ := dns.NewRR(q.Name + " IN AAAA " + proxy.MakeFakeIP(net.ParseIP(ip), zoneID))
+				answer = append(answer, rr)
+			}
 			msg.Answer = answer
 			msg.Question[0].Qtype = dns.TypeAAAA
 			msg.MsgHdr.Response = true
@@ -277,8 +281,10 @@ func (proxy *DNSProxy) processTypeAAAA(dnsServer string, q *dns.Question, reques
 						continue
 					}
 				}
-				rr, _ := dns.NewRR(q.Name + " IN AAAA " + proxy.MakeFakeIP(a.A, zoneID))
-				answer = append(answer, rr)
+				if proxy.zones[zoneID].Prefix != nil {
+					rr, _ := dns.NewRR(q.Name + " IN AAAA " + proxy.MakeFakeIP(a.A, zoneID))
+					answer = append(answer, rr)
+				}
 			}
 		}
 		msg.Answer = answer

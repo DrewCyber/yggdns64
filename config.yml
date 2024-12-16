@@ -6,9 +6,8 @@ listen: "127.0.0.1:53"
 zones:
   my-direct-zone:
     domains:                        # Zone domains filter
-      - "ya.ru"
+      - "ru"
       - "com.tr"
-    prefix: "300:abcd:feda:f321:ff::"
     return-public-ipv4: true        # Return 'white' A records
   default:
     domains:                        # Zone domains filter
