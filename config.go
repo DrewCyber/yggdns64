@@ -27,7 +27,7 @@ type ZoneConfig struct {
 
 type Config struct {
 	Listen     string                `yaml:"listen"`
-	Zone       map[string]ZoneConfig `yaml:"zone"`
+	Zones      map[string]ZoneConfig `yaml:"zones"`
 	Prefix     string                `yaml:"prefix"`
 	Forwarders map[string]string     `yaml:"forwarders"`
 	Default    string                `yaml:"default"`

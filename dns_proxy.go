@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -21,6 +22,7 @@ type DNSProxy struct {
 	prefix           net.IP
 	ReturnPublicIPv4 bool
 	ia               InvalidAddress
+	zones            map[string]ZoneConfig
 }
 
 func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
@@ -28,14 +30,17 @@ func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 	var answer *dns.Msg
 	var err error
 
+	// (*requestMsg).Question[0].Name  = "ya.ru."
+
 	if len(requestMsg.Question) > 0 {
 		question := requestMsg.Question[0]
 
 		dnsServer := proxy.getForwarder(question.Name)
+		zoneID := proxy.getZoneID(question.Name)
 
 		switch question.Qtype {
 		case dns.TypeA:
-			if !proxy.ReturnPublicIPv4 {
+			if !proxy.zones[zoneID].ReturnPublicIPv4 {
 				answer, err = proxy.processTypeA(dnsServer, &question, requestMsg)
 			} else {
 				answer, err = proxy.processOtherTypes(dnsServer, &question, requestMsg)
@@ -306,6 +311,29 @@ func (dnsProxy *DNSProxy) getForwarder(domain string) string {
 		}
 	}
 	return dnsProxy.defaultForward
+}
+
+func (dnsProxy *DNSProxy) getZoneID(domain string) string {
+	//  Find zone id for the requested domain
+	for k, v := range dnsProxy.zones {
+		for _, ZoneDomain := range v.Domains {
+			if strings.EqualFold(domain, ZoneDomain+".") ||
+				strings.HasSuffix(strings.ToLower(domain), strings.ToLower("."+ZoneDomain+".")) {
+				return k
+			}
+		}
+	}
+	//  Else find default zone with .
+	for k, v := range dnsProxy.zones {
+		for _, ZoneDomain := range v.Domains {
+			if ZoneDomain == "." {
+				return k
+			}
+		}
+	}
+	// No zone found
+	log.Fatal("Failed to find zone for " + domain + ". Probably no zones with '.' domain.")
+	return ""
 }
 
 func (dnsProxy *DNSProxy) getStatic(domain string) string {

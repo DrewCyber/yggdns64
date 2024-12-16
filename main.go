@@ -16,9 +16,9 @@ func main() {
 		log.Fatalf("Failed to load configs: %s", err)
 	}
 
-	prefix := net.ParseIP(cfg.Zone["default"].Prefix)
+	prefix := net.ParseIP(cfg.Zones["default"].Prefix)
 	if len(prefix) != net.IPv6len || prefix.IsUnspecified() {
-		log.Fatalf("Wrong prefix format: %s", cfg.Zone["default"].Prefix)
+		log.Fatalf("Wrong prefix format: %s", cfg.Zones["default"].Prefix)
 	}
 
 	dnsProxy := DNSProxy{
@@ -29,6 +29,7 @@ func main() {
 		defaultForward:   cfg.Default,
 		ReturnPublicIPv4: cfg.ReturnPublicIPv4,
 		ia:               cfg.IA,
+		zones:            cfg.Zones,
 	}
 
 	logger := NewLogger(cfg.LogLevel)

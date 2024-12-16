@@ -1,13 +1,13 @@
-# Listen address
+# Listen address "[303:c771:1561:ed81::1]:53"
 listen: "127.0.0.1:53"
 
 # Zones are handled from top to bottom
-zone:
+# If zone prefix is unset, this zone it will not convert A records to AAAA
+zones:
   my-direct-zone:
     domains:                        # Zone domains filter
-      - ".ya.ru"
-      - ".com.tr"
-    # If prefix unset,
+      - "ya.ru"
+      - "com.tr"
     prefix: "300:dada:feda:f443:ff::"
     return-public-ipv4: true        # Return 'white' A records
   default:
