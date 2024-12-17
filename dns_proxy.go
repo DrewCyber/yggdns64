@@ -36,7 +36,7 @@ func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 
 		switch question.Qtype {
 		case dns.TypeA:
-			answer, err = proxy.processTypeA(dnsServer, &question, requestMsg, zoneID)
+			answer, err = proxy.processTypeA(dnsServer, lookup, &question, requestMsg, zoneID)
 		case dns.TypeAAAA:
 			answer, err = proxy.processTypeAAAA(dnsServer, &question, requestMsg, zoneID)
 		case dns.TypePTR:
@@ -176,7 +176,7 @@ func (proxy *DNSProxy) processTypePTR(dnsServer string, q *dns.Question, request
 }
 
 // Query A record.
-func (proxy *DNSProxy) processTypeA(dnsServer string, q *dns.Question, requestMsg *dns.Msg, zoneID string) (*dns.Msg, error) {
+func (proxy *DNSProxy) processTypeA(dnsServer string, lookup LookupFunc, q *dns.Question, requestMsg *dns.Msg, zoneID string) (*dns.Msg, error) {
 	queryMsg := new(dns.Msg)
 	requestMsg.CopyTo(queryMsg)
 	queryMsg.Question = []dns.Question{*q}
@@ -356,6 +356,8 @@ func GetOutboundIP() (net.IP, error) {
 
 	return localAddr.IP, nil
 }
+
+type LookupFunc func(string, *dns.Msg) (*dns.Msg, error)
 
 func lookup(server string, m *dns.Msg) (*dns.Msg, error) {
 	dnsClient := new(dns.Client)
