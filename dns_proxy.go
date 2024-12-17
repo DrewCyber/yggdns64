@@ -186,7 +186,7 @@ func (proxy *DNSProxy) processTypeA(dnsServer string, q *dns.Question, requestMs
 		queryMsg.MsgHdr.Opcode = dns.OpcodeNotify
 		return queryMsg, err
 	}
-	if proxy.zones[zoneID].ReturnPublicIPv4 {
+	if !proxy.zones[zoneID].ReturnPublicIPv4 {
 		// Emulate "no record" for existings A
 		msg.Answer = make([]dns.RR, 0)
 	}
