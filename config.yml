@@ -6,11 +6,12 @@ listen: "[303:c771:1561:ed81::1]:53"
 zones:
   my-direct-zone:
     domains:                        # Zone domains filter
-      - "www.google.com"
+      - "myip.ru"
       - "com.tr"
     return-public-ipv4: true        # Return 'white' A records
   default:
     domains:                        # Zone domains filter
+      # - "myip.com"
       - "."
     prefix: "300:dada:feda:f123:ff::" # If prefix is set, then it will convert A records to AAAA
     return-public-ipv4: false       # Return 'white' A records
@@ -25,6 +26,7 @@ invalid-address: ignore
 # Forwarders
 forwarders:
   ".ygg": "[308:84:68:55::]:53"  # Alfis servers: 308:25:40:bd:: / 308:62:45:62:: / 308:c8:48:45::
+  ".local": "192.168.3.1:53"
 
 # Default DNS forwarder
 default: 8.8.8.8:53
