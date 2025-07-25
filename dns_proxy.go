@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -33,6 +32,12 @@ func (proxy *DNSProxy) getResponse(requestMsg *dns.Msg) (*dns.Msg, error) {
 
 		dnsServer := proxy.getForwarder(question.Name)
 		zoneID := proxy.getZoneID(question.Name)
+
+		// If zoneID is empty, return NXDOMAIN
+		if zoneID == "" {
+			responseMsg.SetRcode(requestMsg, dns.RcodeNameError)
+			return responseMsg, nil
+		}
 
 		switch question.Qtype {
 		case dns.TypeA:
@@ -331,7 +336,7 @@ func (dnsProxy *DNSProxy) getZoneID(domain string) string {
 		}
 	}
 	// No zone found
-	log.Fatal("Failed to find zone for " + domain + ". Probably no zones with '.' domain.")
+	// log.Fatal("Failed to find zone for " + domain + ". Probably no zones with '.' domain.")
 	return ""
 }
 

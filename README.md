@@ -27,7 +27,7 @@ zones:
     domains:                        # Zone domains filter
       - "."
     prefix: "300:dada:feda:f123:ff::" # If prefix is set, then it will convert A records to AAAA
-    return-public-ipv4: false       # Return 'white' A records
+    return-public-ipv4: false       # Do not return 'white' A records
 ```
 Opposite case. By default route all with ipv4, but forward *.example.com and *.com.tr domains to Nat64:
 ```
@@ -58,14 +58,43 @@ zones:
     domains:                        # Zone domains filter
       - "."
     prefix: "300:dada:feda:f123:ff::" # If prefix is set, then it will convert A records to AAAA
-    return-public-ipv4: false       # Return 'white' A records
+    return-public-ipv4: false       # Do not return 'white' A records
+```
+No wildcard zone. Resolve only particular domains. For all other request return NXDOMAIN
+```
+zones:
+  default:
+    domains:                        # Zone domains filter
+      - "example.com"
+      - "com.tr"
+    prefix: "300:dada:feda:f123:ff::" # If prefix is set, then it will convert A records to AAAA
+    return-public-ipv4: false       # Do not return 'white' A records
 ```
 
+
+## Build
+`go build .`
+## Run
+`./yggdns64 -file ./config.yml`
+## Test
+```
+dig ya.ru any  @127.0.0.1 -p 1053
+dig ya.ru AAAA  @127.0.0.1 -p 1053
+dig ya.ru A  @127.0.0.1 -p 1053
+```
+## Create systemd service
+```
+cp ./yggdns64.service /etc/systemd/system/yggdns64.service
+systemctl daemon-reload
+systemctl start yggdns64
+systemctl enable yggdns64
+```
 
 ### TODO:  
 - [x] zones config
 - [x] general domains list handling
 - [x] 'strict-ipv6: yes' replace with 'return-public-ipv4: no'
 - [x] convert-a-to-aaaa if prefix is set (prefix: "300:dada:feda:f443:ff::")
+- [ ] use domains-file to import domains list
 - [ ] return-public-ipv6: true
 - [ ] check domains config regexp "example.com" and "." presence.
